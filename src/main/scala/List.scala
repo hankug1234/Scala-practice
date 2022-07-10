@@ -14,6 +14,12 @@ object List{
     {
      Cons(a,list)
     }
+  def drop[A](list: List[A],num:Int):List[A]= {
+    if(num == 0) list
+    else if(list == Nil) list
+    else drop(rtail[A](list),num-1)
+
+  }
   def apply[A](as:A*):List[A]=
   {
     if(as.isEmpty)Nil
@@ -26,11 +32,13 @@ object List{
     }
   def main(A:Array[String]): Unit =
   {
-    var list0 = List(1,2,3,4)
+    var list0 = List()
     var list1 =rtail[Int](list0)
     println(show[Int](list0))
     println(show[Int](list1))
     var list2 = setHead[Int](9,list1)
     println(show[Int](list2))
+    var list3 = drop[Int](list0,3)
+    println(show[Int](list3))
   }
 }
