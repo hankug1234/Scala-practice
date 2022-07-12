@@ -120,6 +120,22 @@ object List{
     case Nil => Nil
     case Cons(x,y) => append(f(x),flatMap(y)(f)) }
 
+  def listAdd[A](list1: List[A], list2: List[A])(f:(A,A)=>A): List[A] = {
+    val a = list1 match{case Nil => Nil case Cons(x,y) => Cons(x,y) }
+    val b = list2 match{case Nil => Nil case Cons(x,y) => Cons(x,y) }
+    val ay = a match{case Nil => Nil case Cons(_,y) => y}
+    val by = b match{case Nil => Nil case Cons(_,y) => y}
+
+    if((a!=Nil) && (b!=Nil))
+      Cons(f(a match{case Cons(x,_) => x},b match{case Cons(x,_) => x}),listAdd(ay,by)(f))
+    else if((a==Nil) && (b!=Nil))
+      Cons(b match{case Cons(x,_) => x},listAdd(ay,by)(f))
+    else if((a!=Nil) && (b==Nil))
+      Cons(a match{case Cons(x,_) => x},listAdd(ay,by)(f))
+    else
+      Nil
+  }
+
   def main(A:Array[String]): Unit =
   {
     def odd(i :Int): Boolean={if(i%2==0)false else true }
@@ -156,5 +172,7 @@ object List{
     filter_list_test
     val flatmap_test = flatMap(list0)(i=>List(i,i))
     flatmap_test
+    val list_add_test = listAdd(filter_list,list0)((a,b)=> a+b)
+    list_add_test
   }
 }
