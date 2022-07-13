@@ -1,5 +1,4 @@
 package fpinscala.datastructure
-
 import scala.annotation.tailrec
 
 sealed trait List[+A]

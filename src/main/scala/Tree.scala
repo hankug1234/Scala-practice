@@ -18,15 +18,6 @@ object Tree
     count(tree,0)
   }
 
-  def foldSize[A](tree : Tree[A]): Int = {
-    def count[A](a:A,b:Int):Int =
-
-      {
-        b+1
-      }
-    fold(tree,0)((a,b) => count(a,b))
-  }
-
   def depth[A](tree :Tree[A]): String = {
     def stringMax(s1:String,s2:String): String =
       {
@@ -56,11 +47,9 @@ object Tree
     {
       val tree = Branch[Int](Branch(Leaf(15),Branch(Leaf(9),Branch(Leaf(11),Leaf(12)))),Branch(Leaf(3),Leaf(4)))
       val s = size(tree)
-      val m = maximum(tree)
       val path = depth(tree)
       val mapAtoB = map(tree)(a => "i am %d".formatted(a))
       s
-      m
       path
       mapAtoB
     }
