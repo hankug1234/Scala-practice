@@ -26,6 +26,11 @@ object optionTest {
     case x::y => map2(x.filter((a)=>a==None),sequence(y))((a,b) => a::b)
   }
 
+  def traverse[A,B](list: List[A])(f:A =>Option[B]): Option[List[B]] = list match {
+    case Nil => Some(Nil)
+    case x::y => map2(f(x).filter((a)=>(a==None)),traverse(y)(f))((a,b) => a::b )
+  }
+
   def main(a:Array[String]):Unit =
   {
     val list = List(Some(1),Some(2),Some(3),Some(None))
