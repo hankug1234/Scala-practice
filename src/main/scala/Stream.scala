@@ -59,13 +59,27 @@ object Stream
     Cons(()=>head,()=>tail)
   }
 
-  def map[A,B](stream:Stream[A])(f:A=>B):B =
+  def map[A,B](stream:Stream[A])(f:A=>B):Stream[B] =
     {
-      Empty.foldRight(Empty)()
+      stream.foldRight[Stream[B]](empty)((a,b)=>cons(f(a),b))
+    }
+
+  def flatMap[A,B](stream:Stream[A])(f:A=>Stream[B]):Stream[B] =
+    {
+      stream.foldRight[Stream[B]](empty)((a,b) => append(f(a),b))
+    }
+
+  def append[A](stream1: => Stream[A],stream2: => Stream[A]): Stream[A] =
+    {
+      stream1.foldRight[Stream[A]](stream2)((a,b) => cons(a,b))
+    }
+
+  def filter[A](stream: Stream[A])(f:A=>Boolean): Stream[A] =
+    {
+      stream.foldRight[Stream[A]](empty)((a,b) => if(f(a)) cons(a,b) else b)
     }
 
   def apply[A](as:A*):Stream[A] = {
-    {println("hi")}
     if(as.isEmpty)  empty
     else cons(as.head,apply(as.tail:_*))
   }
@@ -76,7 +90,17 @@ object run{
     {
       val test2 = Stream(1,2,3,4,5).takeWhile(a=> a>3).toList
       val test3 = Stream(5,6,7).headOption
+      val test4 = Stream.map(Stream(1,2,3,4,5,6))(a => "i am %d".format(a)).toList
+      val test5 = Stream.flatMap(Stream(1,2,3,4,5,6))(a => Stream.cons("i am %d".format(a),Stream.empty)).toList
+      val test6 = Stream.filter(Stream(1,7,4,2,7,6))(a => a>2).toList
       test2
       test3
+      test4
+      test5
+      test6
+      val j = println("i am not lazy value")
+      lazy val i = println("evaluation")
+      println("not yet evaluation")
+      i
     }
 }
