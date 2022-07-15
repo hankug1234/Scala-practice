@@ -48,62 +48,78 @@ sealed trait Stream[+A]
     }
 }
 
-object Stream
-{
-  def empty[A] : Stream[A] = Empty
+object Stream {
+  def empty[A]: Stream[A] = Empty
 
-  def cons[A](hd: =>A,tl: =>Stream[A]):Stream[A] =
-  {
+  def cons[A](hd: => A, tl: => Stream[A]): Stream[A] = {
     lazy val head = hd
     lazy val tail = tl
-    Cons(()=>head,()=>tail)
+    Cons(() => head, () => tail)
   }
 
-  def map[A,B](stream:Stream[A])(f:A=>B):Stream[B] =
-    {
-      stream.foldRight[Stream[B]](empty)((a,b)=>cons(f(a),b))
-    }
-
-  def flatMap[A,B](stream:Stream[A])(f:A=>Stream[B]):Stream[B] =
-    {
-      stream.foldRight[Stream[B]](empty)((a,b) => append(f(a),b))
-    }
-
-  def append[A](stream1: => Stream[A],stream2: => Stream[A]): Stream[A] =
-    {
-      stream1.foldRight[Stream[A]](stream2)((a,b) => cons(a,b))
-    }
-
-  def filter[A](stream: Stream[A])(f:A=>Boolean): Stream[A] =
-    {
-      stream.foldRight[Stream[A]](empty)((a,b) => if(f(a)) cons(a,b) else b)
-    }
-
-  def apply[A](as:A*):Stream[A] = {
-    if(as.isEmpty)  empty
-    else cons(as.head,apply(as.tail:_*))
+  def map[A, B](stream: Stream[A])(f: A => B): Stream[B] = {
+    stream.foldRight[Stream[B]](empty)((a, b) => cons(f(a), b))
   }
 
-  def constant[A](a:A):Stream[A] = {
-    cons(a,constant(a))
+  def flatMap[A, B](stream: Stream[A])(f: A => Stream[B]): Stream[B] = {
+    stream.foldRight[Stream[B]](empty)((a, b) => append(f(a), b))
   }
 
-  def from(n:Int):Stream[Int] = {
-    cons(n,from(n+1))
+  def append[A](stream1: => Stream[A], stream2: => Stream[A]): Stream[A] = {
+    stream1.foldRight[Stream[A]](stream2)((a, b) => cons(a, b))
   }
 
-  def fibs:Stream[Int] = {
-    def go(a:Int,b:Int):Stream[Int] = cons(a+b,go(a+b,b))
-    cons(0,cons(1,go(0,1)))
+  def filter[A](stream: Stream[A])(f: A => Boolean): Stream[A] = {
+    stream.foldRight[Stream[A]](empty)((a, b) => if (f(a)) cons(a, b) else b)
   }
 
-  def unfold[A,S](z: S)(f:S => Option[(A,S)]): Stream[A] =
-    {
-      f(z)match{case None => empty case Some(a) => cons(a._1,unfold(a._2)(f))}
+  def apply[A](as: A*): Stream[A] = {
+    if (as.isEmpty) empty
+    else cons(as.head, apply(as.tail: _*))
+  }
+
+  def constant[A](a: A): Stream[A] = {
+    cons(a, constant(a))
+  }
+
+  def from(n: Int): Stream[Int] = {
+    cons(n, from(n + 1))
+  }
+
+  def fibs: Stream[Int] = {
+    def go(a: Int, b: Int): Stream[Int] = cons(a + b, go(a + b, b))
+
+    cons(0, cons(1, go(0, 1)))
+  }
+
+  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = {
+    f(z) match {
+      case None => empty
+      case Some(a) => cons(a._1, unfold(a._2)(f))
     }
+  }
+
+  def unfoldOnes: Stream[Int] = unfold[Int, Stream[Int]](empty)(s => Some((1, s)))
+
+  def unfoldConstant[A](a: A): Stream[A] = unfold[A, Stream[A]](empty)(s => Some((a, s)))
+
+  def unfoldFrom(n: Int): Stream[Int] =
+    unfold[Int, Stream[Int]](cons(0, empty))(s => s match {
+      case Cons(x, _) => Some((n + x(), cons(x() + 1, empty)))
+    })
+
+  def unfoldFibs: Stream[Int] =
+    unfold[Int, Stream[Int]](cons(0, cons(1, empty)))(s =>
+      s match {
+        case Cons(x, y) => Some((x(), cons((y() match {
+          case Cons(x, _) => x()
+        }), cons(x() + (y() match {
+          case Cons(x, _) => x()
+        }), empty))))
+      })
 }
-
 object run{
+
   def main(a:Array[String]): Unit =
     {
       val test2 = Stream(1,2,3,4,5).takeWhile(a=> a>3).toList
@@ -120,5 +136,11 @@ object run{
       lazy val i = println("evaluation")
       println("not yet evaluation")
       i
+      val one = Stream.unfoldOnes.take(10).toList
+      val two = Stream.unfoldFrom(10).take(10).toList
+      val tree = Stream.unfoldFibs.take(10).toList
+      one
+      two
+      tree
     }
 }
