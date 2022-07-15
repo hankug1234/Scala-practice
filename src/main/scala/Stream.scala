@@ -83,6 +83,24 @@ object Stream
     if(as.isEmpty)  empty
     else cons(as.head,apply(as.tail:_*))
   }
+
+  def constant[A](a:A):Stream[A] = {
+    cons(a,constant(a))
+  }
+
+  def from(n:Int):Stream[Int] = {
+    cons(n,from(n+1))
+  }
+
+  def fibs:Stream[Int] = {
+    def go(a:Int,b:Int):Stream[Int] = cons(a+b,go(a+b,b))
+    cons(0,cons(1,go(0,1)))
+  }
+
+  def unfold[A,S](z: S)(f:S => Option[(A,S)]): Stream[A] =
+    {
+      f(z)match{case None => empty case Some(a) => cons(a._1,unfold(a._2)(f))}
+    }
 }
 
 object run{
@@ -90,9 +108,9 @@ object run{
     {
       val test2 = Stream(1,2,3,4,5).takeWhile(a=> a>3).toList
       val test3 = Stream(5,6,7).headOption
-      val test4 = Stream.map(Stream(1,2,3,4,5,6))(a => "i am %d".format(a)).toList
-      val test5 = Stream.flatMap(Stream(1,2,3,4,5,6))(a => Stream.cons("i am %d".format(a),Stream.empty)).toList
-      val test6 = Stream.filter(Stream(1,7,4,2,7,6))(a => a>2).toList
+      val test4 = Stream.map(Stream(1,2,3,4,5,6))(a => "i am %d".format(a))
+      val test5 = Stream.flatMap(Stream(1,2,3,4,5,6))(a => Stream.cons("i am %d".format(a),Stream.empty))
+      val test6 = Stream.filter(Stream(1,7,4,2,7,6))(a => a>2)
       test2
       test3
       test4
