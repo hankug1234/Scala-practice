@@ -117,6 +117,29 @@ object Stream {
           case Cons(x, _) => x()
         }), empty))))
       })
+
+  def unfoldMap [A, B](stream: Stream[A])(f: A => B): Stream[B] ={
+    unfold(stream)(s => s match{case Empty => None case Cons(x,y) => Some((f(x())),y())})
+  }
+
+  def unfoldTake[A](stream :Stream[A])(n:Int):Stream[A] = {
+    unfold[A,(Int,Stream[A])]((n,stream))(s => if(s._1 <= 0) None else s._2 match{case Empty => None case Cons(x,y) => Some(x(),(s._1-1,y()))})
+  }
+
+  def unfoldTakeWhile[A](stream :Stream[A])(f:A => Boolean):Stream[A] =
+    {
+      def go(s:Stream[A]):Option[(A,Stream[A])] = s match{case Empty => None case Cons(x,y) => if(f(x())) Some((x(),y())) else go(y())}
+      unfold[A,Stream[A]](stream)(s => s match{case Empty => None case Cons(x,y) => if(f(x())) Some((x(),y())) else go(y()) } )
+    }
+  def unfoldZipWith[A](stream1 :Stream[A],stream2 :Stream[A])(add:(A,A)=>A):Stream[A] =
+    {
+      unfold[A,(Stream[A],Stream[A])]((stream1,stream2))(s =>
+        s._1 match{case Empty =>
+          None case Cons(x,y) =>
+          s._2 match{case Empty =>
+            None case Cons(a,b) =>
+            Some((add(x(),a()),(y(),b())))}})
+    }
 }
 object run{
 
@@ -124,7 +147,7 @@ object run{
     {
       val test2 = Stream(1,2,3,4,5).takeWhile(a=> a>3).toList
       val test3 = Stream(5,6,7).headOption
-      val test4 = Stream.map(Stream(1,2,3,4,5,6))(a => "i am %d".format(a))
+      val test4 = Stream.unfoldMap(Stream(1,2,3,4,5,6))(a => "i am %d".format(a)).toList
       val test5 = Stream.flatMap(Stream(1,2,3,4,5,6))(a => Stream.cons("i am %d".format(a),Stream.empty))
       val test6 = Stream.filter(Stream(1,7,4,2,7,6))(a => a>2)
       test2
@@ -136,11 +159,15 @@ object run{
       lazy val i = println("evaluation")
       println("not yet evaluation")
       i
-      val one = Stream.unfoldOnes.take(10).toList
+      val one = Stream.unfoldTake(Stream.unfoldOnes)(10).toList
       val two = Stream.unfoldFrom(10).take(10).toList
       val tree = Stream.unfoldFibs.take(10).toList
+      val four = Stream.unfoldTakeWhile(Stream(1,3,5,2,4,7))(a=>a>3).toList
+      val five = Stream.unfoldZipWith[Int](Stream(1,2),Stream(2,3,4))((a : Int,b : Int) => (a+b)).toList
       one
       two
       tree
+      four
+      five
     }
 }
