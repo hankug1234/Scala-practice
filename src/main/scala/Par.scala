@@ -1,5 +1,6 @@
   import scala.concurrent.duration.TimeUnit
-import java.util.concurrent.{ExecutorService,Future,Callable}
+  import java.util.concurrent.{Callable, ExecutorService, Future}
+  import scala.{::, List}
 
 object Par {
   /*
@@ -19,14 +20,43 @@ object Par {
 
   }
 
-  def unit[A](a:A): Par[A] = (es: ExecutorService) => UnitFuture(a)
+  def unit[A](a:A): Par[A] = (es: ExecutorService) => UnitFuture(a) // a를 병렬 처리 가능한 값으로 승격 시킨다
   def run[A](s: ExecutorService)(a: Par[A]): Future[A] = a(s)
   def map2[A,B,C](a: Par[A], b: Par[B])(f:(A,B) => C):Par[C] = (es: ExecutorService) => {
     val af = a(es)
     val bf = b(es)
     UnitFuture(f(af.get,bf.get))
   }
-  def fork[A](a: => Par[A]): Par[A] = es => es.submit(new Callable[A]{ def call = a(es).get})
+
+  def map[A,B](a: Par[A])(f:A=>B):Par[B] = {
+  map2(a,unit(()))((a,_) => f(a))
+  }
+
+  // def parMap[A,B](ps: List[A])(f: A => B): Par[List[B]]
+
+  def fork[A](a: => Par[A]): Par[A] = es => es.submit(new Callable[A]{ def call = a(es).get}) // 분기가 시작 된다는 서명 이자 excutorService 를 받아 a를 적제 시키는 고리 역할
+
+  def lazyUnit[A](a: => A): Par[A] = fork(unit(a))
+
+  def asyncF[A,B](f: A => B): A => Par[B] = { //f를 병렬 처리 할 수 있도록 만들어줌
+    a => lazyUnit(f(a))
+  }
+
+  def sequence[A](ps: List[Par[A]]):Par[List[A]] = ps match{
+    case Nil => unit(Nil)
+    case x::y => map2(x,fork(sequence(y)))((a,b) => a::b)
+  }
+
+  def parMap[A,B](ps: List[A])(f: A=>B): Par[List[B]] = fork{
+    val fbs: List[Par[B]] = ps.map(asyncF(f))
+    sequence(fbs)
+  }
+
+  def parFilter[A](l: List[A])(f: A => Boolean): Par[List[A]] = fork {
+    val pars: List[Par[List[A]]] =
+      l.map(asyncF(a => if (f(a)) List(a) else List()))
+      map(sequence(pars))(_.flatten) // convenience method on `List` for concatenating a list of lists
+  }
 
 }
 /*
