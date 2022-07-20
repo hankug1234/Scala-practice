@@ -58,6 +58,8 @@ object Par {
       map(sequence(pars))(_.flatten) // convenience method on `List` for concatenating a list of lists
   }
 
+  def equel[A](e: ExecutorService)(p: Par[A], p2: Par[A]) : Boolean = p(e).get == p2(e).get
+
 }
 /*
 trait Callable[A]{def call: A}
