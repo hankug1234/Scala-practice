@@ -2,6 +2,7 @@
   import java.util.concurrent.{Callable, ExecutorService, Future}
   import scala.{::, List}
 
+
 object Par {
   /*
   * def unit[A](a:A): Par[A] = 상수값을 병렬 계산으로 승격 한다
@@ -59,6 +60,49 @@ object Par {
   }
 
   def equel[A](e: ExecutorService)(p: Par[A], p2: Par[A]) : Boolean = p(e).get == p2(e).get
+
+  def delay[A](fa: => Par[A]):Par[A] = es => fa(es)
+
+  def choiceN[A](n: Par[Int])(choices: List[Par[A]]): Par[A] = es =>
+  {
+   val i:Int = run(es)(n).get()
+    run(es)(choices(i))
+  }
+
+  def choice[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] = es =>  {
+    choiceN(map(cond)(a => if(a) 1 else 0 ))(List(t,f))(es)
+  }
+
+  def choiceMap[K,V](key: Par[K])(choice: Map[K,Par[V]]): Par[V] = es => {
+    val k = run(es)(key).get()
+    run(es)(choice(k))
+  }
+
+  def chooser[A,B](pa: Par[A])(choices: A => Par[B]):Par[B] = es => {
+    val p = run(es)(pa).get()
+    run(es)(choices(p))
+  }
+
+  def newChoiceN[A](n: Par[Int])(choices: List[Par[A]]): Par[A]  = es => {
+    chooser(n)(a => choices(a))(es)
+  }
+
+  def newChoice[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] = es => {
+   chooser(cond)(a => if(a) t else f)(es)
+  }
+
+  def join[A](a: Par[Par[A]]):Par[A] = es => {
+    val r = run(es)(a).get()
+    run(es)(r)
+  }
+
+  def flatMap[A,B](a: Par[A])(f: A => Par[B]): Par[B] = {
+
+  }
+
+  def flatMapJoin[A](a: Par[Par[A]]):Par[A] = es => {
+
+  }
 
 }
 /*
