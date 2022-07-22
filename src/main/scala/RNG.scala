@@ -12,9 +12,13 @@ case class SimpleRNG(seed: Long) extends RNG{
   }
 }
 
-object testRNG{
+object RNG{
 
   type Rand[+A] = RNG => (A,RNG)
+
+  def boolean(rng: RNG): (Boolean, RNG) =
+    rng.nextInt match{
+  case (i,rng2) => (i % 2 == 0,rng2)}
 
   def nonNegativeInt(rng: RNG): (Int,RNG) = {
     val(value,cur_rng) = rng.nextInt
