@@ -95,7 +95,7 @@ object Par {
     val r = run(es)(a).get()
     run(es)(r)
   }
-
+/*
   def flatMap[A,B](a: Par[A])(f: A => Par[B]): Par[B] = {
 
   }
@@ -103,7 +103,7 @@ object Par {
   def flatMapJoin[A](a: Par[Par[A]]):Par[A] = es => {
 
   }
-
+*/
 }
 /*
 trait Callable[A]{def call: A}
