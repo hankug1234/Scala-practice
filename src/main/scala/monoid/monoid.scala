@@ -37,8 +37,5 @@ object monoid_test{
     val booleanOr: Monoid[Boolean] = new Monoid[Boolean]{def zero: Boolean = false; def op(a: Boolean, b: Boolean) = {a||b}}
     val booleanAnd: Monoid[Boolean] = new Monoid[Boolean]{def zero: Boolean = true; def op(a: Boolean, b:Boolean) = {a && b}}
      */
-    val bool = new monoid_set;
-    val re = bool.checkSort(IndexedSeq(6,5,4,3,2,1))
-    re
   }
 }
